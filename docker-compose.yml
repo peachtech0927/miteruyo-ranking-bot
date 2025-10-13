@@ -1,0 +1,9 @@
+services:
+  mecab:
+    build: .
+    image: mecab-neologd-python:v6
+    volumes:
+      - ./output:/app/output
+      - ./logo:/app/logo
+    env_file:
+      - .env

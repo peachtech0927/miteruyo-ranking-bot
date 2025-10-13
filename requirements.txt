@@ -1,0 +1,12 @@
+mecab-python3
+pandas
+wordcloud
+matplotlib
+japanize-matplotlib==1.1.3
+numpy
+pillow # 画像処理ライブラリ（PIL）
+discord.py
+python-dotenv # 環境変数を扱う
+emoji
+
+psycopg2-binary
