@@ -1,0 +1,13 @@
+# 秘密情報を守る
+.env
+
+# Pythonが自動生成するキャッシュファイル
+__pycache__/
+*.pyc
+
+# OSが自動生成するファイル
+.DS_Store
+Thumbs.db
+
+# outputファイルにできたワードクラウド画像をgithubにあげない
+output/
