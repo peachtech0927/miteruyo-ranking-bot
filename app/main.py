@@ -13,6 +13,7 @@ import discord
 from dotenv import load_dotenv
 from collections import Counter
 import emoji
+import unicodedata
 from get_data import get_db_connection
 
 def fetch_data(conn):
@@ -68,25 +69,26 @@ if not messages:
     print("データベースからメッセージが取得できませんでした。")
     exit(1)
 
-# 絵文字と記号・文章をあらかじめ分ける
-def separate_by_type(messages):
+# 絵文字と空白を除いたテキストのみ抽出
+def separate_text(messages):
     text_list = []
-    emoji_list = []
-    
+
     for sentence in messages:
         texts = []
-        emojis = []
         for char in sentence:
             if emoji.is_emoji(char):
-                emojis.append(char)
-            elif  not char.isspace(): # 空白文字は無視
+                continue
+            if unicodedata.category(char).startswith(("P", "S")):
+                continue
+            if char.isdigit() and len(char) == 1:
+                continue
+            if not char.isspace():  # 空白文字は無視
                 texts.append(char)
 
         text_list.append("".join(texts))
-        emoji_list.append("".join(emojis))
 
-    return text_list, emoji_list
-text_list, emoji_list = separate_by_type(messages)
+    return text_list
+text_list = separate_text(messages)
 
 for sentence in text_list:
     words, roots, parts = [], [], []
@@ -95,6 +97,8 @@ for sentence in text_list:
         surface = node.surface # 表層形
         features = node.feature.split(",") # mecabの出力結果をコンマ区切りで取得
         base = features[6] if len(features) > 6 else "*" # 原形
+        if base == "*" or not base.strip():  # 原形がない場合のみ表層形
+            base = surface
         pos = features[0] # 品詞
         if surface:
             words.append(surface)
@@ -110,11 +114,11 @@ def filter():
     # 意味のある単語を新リスト（filtered_words）に格納
     filtered_words = []
     # 除外したい単語リスト
-    STOP_WORDS = {"の", "そう", "ない", "いい", "ん", "とき", "よう", "これ", "こと","人","今","時","感じ","的","何","なに","なん","化","他"}
+    STOP_WORDS = {"の", "そう", "ない", "いい", "ん", "とき", "よう", "これ", "こと","人","今","時","感じ","的","何","なに","なん","化","他","HTTPS"}
 
     for i, row in df.iterrows():
         for root, part in zip(row["root"], row["part"]):
-            if part in ["形容詞", "形容動詞", "名詞"] and root not in STOP_WORDS:
+            if part in ["形容詞", "形容動詞", "名詞", "感動詞"] and root not in STOP_WORDS and root.strip():
                 filtered_words.append(root)
     return filtered_words
 
@@ -133,7 +137,7 @@ def create_wordcloud():
         font_path="/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
         background_color="white",
         mask=mask_image,
-        colormap="Paired",
+        colormap="tab10",
         width=800,
         height=800
     ).generate(text_for_wc)
@@ -163,7 +167,7 @@ async def on_ready():
             rank_strings.append(f"{crown}{rank} 位  「**{word}**」  {count}回")
         
         ranking_text = "\n".join(rank_strings)
-        final_message = f"🍑先月のぴちてくトレンドワードは…🗣️\n## {ranking_text}\n\nでした！"
+        final_message = f"🍑●月のぴちてくトレンドワードは…🗣️\n## {ranking_text}\n\nでした！"
 
         image_path = create_wordcloud()
         channel = client.get_channel(DISCORD_CHANNEL_ID)
