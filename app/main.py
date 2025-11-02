@@ -122,17 +122,17 @@ def filter():
                 filtered_words.append(root)
     return filtered_words
 
-# intransitiveの要素をスペース区切りで連結
-text_for_wc = " ".join(filter())
+# 単語の頻度を計算（ランキングと画像で同じデータソースを使用）
+word_frequencies = Counter(filter())
 
-def create_wordcloud():
+def create_wordcloud(frequencies):
     # 画像保存場所を作成
     OUTPUT_DIR = os.getenv("OUTPUT_DIR", "/app/output")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     mask_image = np.array(Image.open("/app/logo/PeachTech_black.png"))
 
-    # ワードクラウド生成（フォント指定なし）
+    # 頻度辞書から直接ワードクラウド生成
     wordcloud = WordCloud(
         font_path="/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
         background_color="white",
@@ -140,7 +140,8 @@ def create_wordcloud():
         colormap="tab10",
         width=800,
         height=800
-    ).generate(text_for_wc)
+    ).generate_from_frequencies(frequencies)
+
 
     # タイムスタンプ付きのファイル名を生成
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -154,22 +155,24 @@ def create_wordcloud():
 @client.event
 async def on_ready():
     print(f'{client.user} としてログインしました。')
-    
+
     try:
-        word_counts = Counter(filter())
-        top_words = word_counts.most_common(3)
+        # 同じ頻度データを使用してランキングと画像を生成
+        top_words = word_frequencies.most_common(3)
+
         rank_strings = []
         for rank, (word, count) in enumerate(top_words, 1):
             if rank == 1:
                 crown = "👑 "  # 1位
             else:
-                crown = "" 
+                crown = ""
             rank_strings.append(f"{crown}{rank} 位  「**{word}**」  {count}回")
-        
+
         ranking_text = "\n".join(rank_strings)
         final_message = f"🍑●月のぴちてくトレンドワードは…🗣️\n## {ranking_text}\n\nでした！"
 
-        image_path = create_wordcloud()
+        # 同じ頻度データを渡して画像を生成
+        image_path = create_wordcloud(word_frequencies)
         channel = client.get_channel(DISCORD_CHANNEL_ID)
 
         if channel:
