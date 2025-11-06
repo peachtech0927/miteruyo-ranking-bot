@@ -1,0 +1,23 @@
+# Dockerイメージに含める必要のないものを除外する（毎回全部ビルドし直すと長すぎるため）
+
+# Docker関連
+Dockerfile
+docker-compose.yml
+
+# Git関連
+.git
+.gitignore
+
+# Python関連
+__pycache__/
+*.pyc
+
+# 秘密情報と設定ファイル
+.env
+
+# 生成物
+output/
+
+# OS固有のファイル
+.DS_Store
+Thumbs.db
