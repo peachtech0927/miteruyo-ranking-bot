@@ -168,8 +168,10 @@ async def on_ready():
                 crown = ""
             rank_strings.append(f"{crown}{rank} 位  「**{word}**」  {count}回")
 
+        last_month = (datetime.now().month - 1) or 12
+        last_month_year = (datetime.now().year - 1) if last_month == 1 else datetime.now().year
         ranking_text = "\n".join(rank_strings)
-        final_message = f"🍑●月のぴちてくトレンドワードは…🗣️\n## {ranking_text}\n\nでした！"
+        final_message = f"🍑{last_month_year}年{last_month}月のぴちてくトレンドワードは…🗣️\n## {ranking_text}\n\nでした！"
 
         # 同じ頻度データを渡して画像を生成
         image_path = create_wordcloud(word_frequencies)
