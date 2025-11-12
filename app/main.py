@@ -34,7 +34,6 @@ load_dotenv()
 # 環境変数からトークンとチャンネルIDを取得
 DISCORD_BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 DISCORD_CHANNEL_ID = int(os.getenv('DISCORD_CHANNEL_ID'))
-# DISCORD_CHANNEL_ID = os.getenv('DISCORD_CHANNEL_ID')
 
 # Discord Botの権限設定
 intents = discord.Intents.default()  # 最低限のみ
@@ -49,8 +48,9 @@ def get_messages(conn):
         return []
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT content FROM messages WHERE content IS NOT NULL AND content != '';")
+            cur.execute("SELECT content FROM messages WHERE content IS NOT NULL AND content != '' AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month');")
             rows = cur.fetchall()
+            # print("💫先月の取得確認💫\n月初: " + str(rows[0:5]) + "\n月末: " + str(rows[-5:]))
             return [row[0] for row in rows if row[0].strip()]  # 空でないコンテンツのみ
     except Exception as e:
         print(f"メッセージ取得中にエラーが発生しました: {e}")
@@ -118,7 +118,7 @@ def filter():
 
     for i, row in df.iterrows():
         for root, part in zip(row["root"], row["part"]):
-            if part in ["形容詞", "形容動詞", "名詞", "感動詞"] and root not in STOP_WORDS and root.strip():
+            if part in ["形容詞", "形容動詞", "名詞", "感動詞"] and root not in STOP_WORDS and len(root) != 1 and root.strip():
                 filtered_words.append(root)
     return filtered_words
 
@@ -168,8 +168,10 @@ async def on_ready():
                 crown = ""
             rank_strings.append(f"{crown}{rank} 位  「**{word}**」  {count}回")
 
+        last_month = (datetime.now().month - 1) or 12
+        last_month_year = (datetime.now().year - 1) if last_month == 1 else datetime.now().year
         ranking_text = "\n".join(rank_strings)
-        final_message = f"🍑●月のぴちてくトレンドワードは…🗣️\n## {ranking_text}\n\nでした！"
+        final_message = f"🍑{last_month_year}年{last_month}月のぴちてくトレンドワードは…🗣️\n## {ranking_text}\n\nでした！"
 
         # 同じ頻度データを渡して画像を生成
         image_path = create_wordcloud(word_frequencies)
