@@ -114,7 +114,7 @@ def filter():
     # 意味のある単語を新リスト（filtered_words）に格納
     filtered_words = []
     # 除外したい単語リスト
-    STOP_WORDS = {"の", "そう", "ない", "いい", "ん", "とき", "よう", "これ", "こと","人","今","時","感じ","的","何","なに","なん","化","他","HTTPS"}
+    STOP_WORDS = {"ああ", "の", "そう", "ない", "いい", "ん", "とき", "よう", "ここ", "そこ","これ", "それ", "あれ", "こと", "もの", "人", "今", "時", "感じ", "的", "何", "なに", "なん", "化", "他", "HTTP", "HTTPS", "COM", "httpsdiscordcomchannels"}
 
     for i, row in df.iterrows():
         for root, part in zip(row["root"], row["part"]):
