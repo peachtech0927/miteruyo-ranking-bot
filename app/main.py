@@ -93,7 +93,8 @@ def analyze_messages(messages):
 
     # 意味のある単語を抽出
     filtered_words = []
-    STOP_WORDS = {"の", "そう", "ない", "いい", "ん", "とき", "よう", "これ", "こと","人","今","時","感じ","的","何","なに","なん","化","他","HTTPS"}
+    # 除外したい単語リスト
+    STOP_WORDS = {"ああ", "の", "そう", "ない", "いい", "ん", "とき", "よう", "ここ", "そこ","これ", "それ", "あれ", "こと", "もの", "人", "今", "時", "感じ", "的", "何", "なに", "なん", "化", "他", "HTTP", "HTTPS", "COM", "httpsdiscordcomchannels"}
 
     for _, row in df.iterrows():
         for root, part in zip(row["root"], row["part"]):
