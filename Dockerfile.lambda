@@ -1,0 +1,46 @@
+# 通常のPython Debianベースイメージ（既存のDockerfileと同じアプローチ）
+FROM python:3.11-slim
+
+# タイムゾーン等の環境設定
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Tokyo
+WORKDIR /var/task
+
+# MeCab, NEologd辞書、その他依存関係を一つのRUN命令でインストール・設定
+# 既存のDockerfileと同じ方法を使用
+RUN apt-get update && apt-get install -y \
+    mecab \
+    mecab-ipadic-utf8 \
+    libmecab-dev \
+    git \
+    make \
+    curl \
+    file \
+    xz-utils \
+    build-essential \
+    sudo \
+    fonts-noto-cjk \
+    # NEologd辞書をクローンしてインストール
+    && git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git /tmp/neologd \
+    && /tmp/neologd/bin/install-mecab-ipadic-neologd -n -y -p /usr/lib/x86_64-linux-gnu/mecab/dic/mecab-ipadic-neologd \
+    && echo "dicdir = $(mecab-config --dicdir)/mecab-ipadic-neologd" > /etc/mecabrc \
+    && cp /etc/mecabrc /usr/local/etc/mecabrc \
+    # 後片付け
+    && rm -rf /tmp/neologd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# AWS Lambda Runtime Interface Client (RIC) のインストール
+RUN pip install --no-cache-dir awslambdaric
+
+# Pythonライブラリのインストール
+COPY requirements.txt /var/task/
+RUN pip install --no-cache-dir -r /var/task/requirements.txt
+
+# アプリケーションコードとリソースをコピー
+COPY app/ /var/task/app/
+COPY logo/ /var/task/app/logo/
+
+# Lambda関数ハンドラーを指定
+ENTRYPOINT ["/usr/local/bin/python", "-m", "awslambdaric"]
+CMD ["app.main.lambda_handler"]
